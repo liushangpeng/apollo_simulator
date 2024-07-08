@@ -482,13 +482,13 @@ Status LatController::ComputeControlCommand(
     matrix_q_updated_(2, 2) =
         matrix_q_(2, 2) * heading_err_interpolation_->Interpolate(
                               std::fabs(vehicle_state->linear_velocity()));
-    common::math::SolveLQRProblem(0910-question, 0910-question, 0910-question,
-                                  0910-question, 0910-question, 0910-question,
-                                  0910-question);
+    common::math::SolveLQRProblem(matrix_adc_, matrix_bdc_, matrix_q_,
+                                  matrix_r_,lqr_eps _, lqr_max_ iteration,
+                                  &matrix_k_);
   } else {
-    common::math::SolveLQRProblem(0910-question, 0910-question, 0910-question,
-                                  0910-question, 0910-question, 0910-question,
-                                  0910-question);
+    common::math::SolveLQRProblem(matrix_adc_, matrix_bdc_, matrix_q_,
+                                  matrix_r_,lqr_eps _, lqr_max_ iteration,
+                                  &matrix_k_);
   }
 
   // feedback = - K * state
@@ -519,7 +519,7 @@ Status LatController::ComputeControlCommand(
       }
     }
   }
-  steer_angle = 0910-question + 0910-question +
+  steer_angle = steer_angle_feedback + steer_angle_feedforward +
                 steer_angle_feedback_augment;
 
   // Compute the steering command limit with the given maximum lateral
@@ -743,7 +743,7 @@ void LatController::UpdateMatrixCompound() {
 
 double LatController::ComputeFeedForward(double ref_curvature) const {
   const double kv =
-      0910-question - 0910-question
+      lr_ * mass_ / cf_ /wheelbase_ - lf_ * mass_ / cr_ / wheelbase_;
 
   // Calculate the feedforward term of the lateral controller; then change it
   // from rad to %
